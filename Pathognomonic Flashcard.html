@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pathognomonic Flashcard</title>
+<style>
+:root{--bg:#0d1016;--pnl:#161a23;--pnl2:#1d222e;--ln:#2b3242;--tx:#e7eaf0;--dim:#959db0;
+  --acc:#5eb3ff;--acc2:#7ee0c0;--warn:#ffb454;--bad:#ff7b72;--good:#7ee787;--star:#ffd166}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);
+  font-family:"Sarabun","Noto Sans Thai","Thonburi",-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(24px + env(safe-area-inset-bottom))}
+header.top{display:flex;align-items:center;gap:10px;margin:4px 0 18px}
+header.top h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.2px}
+header.top .sub{color:var(--dim);font-size:13px}
+.back{background:var(--pnl);border:1px solid var(--ln);border-radius:10px;padding:6px 12px;font-size:14px}
+.back:hover{border-color:var(--acc)}
+
+/* home */
+.hero{text-align:center;margin:18px 0 22px}
+.hero .logo{font-size:44px}
+.hero h1{font-size:26px;margin:6px 0 2px}
+.hero p{color:var(--dim);margin:0;font-size:14px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode{background:var(--pnl);border:1px solid var(--ln);border-radius:16px;padding:20px 16px;text-align:left;transition:.15s}
+.mode:hover{border-color:var(--acc);transform:translateY(-2px)}
+.mode .ic{font-size:30px}
+.mode b{display:block;font-size:18px;margin:8px 0 2px}
+.mode span{color:var(--dim);font-size:13px}
+.panel{background:var(--pnl);border:1px solid var(--ln);border-radius:16px;padding:14px 16px;margin-top:14px}
+.panel h3{margin:0 0 10px;font-size:14px;color:var(--dim);font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--pnl2);border:1px solid var(--ln);border-radius:999px;padding:7px 14px;font-size:14px}
+.chip.on{background:rgba(94,179,255,.16);border-color:var(--acc);color:#cfe6ff}
+.chip.on.star{background:rgba(255,209,102,.14);border-color:var(--star);color:#ffe6a6}
+.stat{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--dim)}
+.bar{height:8px;background:var(--pnl2);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc2),var(--good));border-radius:99px;transition:width .25s}
+.reset{color:var(--bad);font-size:13px;margin-top:10px;opacity:.8}
+.reset:hover{opacity:1;text-decoration:underline}
+
+/* categories */
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cat{background:var(--pnl);border:1px solid var(--ln);border-radius:14px;padding:14px;text-align:left;position:relative;overflow:hidden}
+.cat:hover{border-color:var(--h)}
+.cat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--h)}
+.cat .nm{font-weight:700;font-size:15px}
+.cat .ct{color:var(--dim);font-size:12.5px;margin-top:2px}
+.cat .bar{height:5px;margin-top:10px}
+.cat.all{grid-column:1/-1;background:var(--pnl2)}
+
+/* study */
+.meta{display:flex;justify-content:space-between;align-items:center;color:var(--dim);font-size:13px;margin-bottom:8px}
+.meta .tag{display:inline-flex;align-items:center;gap:6px}
+.meta .dot{width:9px;height:9px;border-radius:50%;background:var(--h)}
+.scene{perspective:1400px;margin:6px 0 14px;user-select:none;-webkit-user-select:none}
+.card{position:relative;width:100%;min-height:min(58vh,440px);transition:transform .45s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d;cursor:pointer}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:20px;
+  background:var(--pnl);border:1px solid var(--ln);display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:26px 22px;text-align:center;overflow:auto}
+.face::after{content:"";position:absolute;left:0;right:0;top:0;height:5px;border-radius:20px 20px 0 0;background:var(--h)}
+.face.back{transform:rotateY(180deg);background:linear-gradient(180deg,var(--pnl2),var(--pnl))}
+.face .lbl{position:absolute;top:16px;left:18px;font-size:12px;color:var(--dim);letter-spacing:.5px}
+.face .q{font-size:clamp(22px,5.4vw,32px);font-weight:700;line-height:1.35}
+.face .ans{font-size:clamp(21px,5vw,29px);font-weight:700;color:var(--acc2);line-height:1.35}
+.face .note{margin-top:16px;color:#c9cfdb;font-size:15.5px;max-width:560px;line-height:1.6}
+.face .note b{color:var(--warn)}
+.face .ref{margin-top:14px;color:var(--dim);font-size:13.5px}
+.face .hint{position:absolute;bottom:14px;color:var(--dim);font-size:12px;opacity:.75}
+.badge{position:absolute;top:13px;right:16px;background:rgba(255,209,102,.14);border:1px solid var(--star);color:var(--star);
+  border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+.mk{position:absolute;top:13px;right:16px;font-size:12px;border-radius:999px;padding:2px 10px;font-weight:700}
+.mk.ok{color:var(--good);border:1px solid var(--good)} .mk.no{color:var(--bad);border:1px solid var(--bad)}
+.badge+.mk{right:110px}
+.ctrl{display:grid;grid-template-columns:52px 1fr 1fr 52px;gap:10px}
+.btn{background:var(--pnl);border:1px solid var(--ln);border-radius:14px;padding:13px 8px;font-size:15px;font-weight:600;transition:.12s}
+.btn:active{transform:scale(.97)}
+.btn.nav{font-size:20px;padding:10px 0}
+.btn.no{border-color:rgba(255,123,114,.55);color:#ffb3ad}
+.btn.no:hover{background:rgba(255,123,114,.12)}
+.btn.ok{border-color:rgba(126,231,135,.55);color:#b9f5be}
+.btn.ok:hover{background:rgba(126,231,135,.12)}
+.btn:disabled{opacity:.35;cursor:default}
+.tools{display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tools .chip{font-size:13px;padding:6px 12px}
+.keys{color:var(--dim);font-size:12px;text-align:center;margin-top:10px}
+
+/* summary */
+.sum{text-align:center;padding:28px 18px}
+.sum .big{font-size:46px;font-weight:800;margin:6px 0}
+.sum .row{display:flex;justify-content:center;gap:22px;margin:10px 0 20px;font-size:15px}
+.sum .row b{font-size:22px;display:block}
+.sum .acts{display:grid;gap:10px;max-width:360px;margin:0 auto}
+.empty{text-align:center;color:var(--dim);padding:40px 10px}
+/* criteria card */
+.face.long{justify-content:flex-start;padding-top:44px}
+.face.long .note{text-align:left;width:100%;font-size:15px;margin-top:12px}
+.face.long .ans{font-size:clamp(19px,4.4vw,24px)}
+.face .note .sec{display:block;color:var(--acc);font-weight:700;margin-top:8px}
+/* sync */
+.sync .row2{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.sync .st{font-size:14px;color:var(--dim)}
+.sync .st b{color:var(--tx)}
+.sync .st.err{color:var(--bad)}
+.sync .st.ok b{color:var(--good)}
+.fld{display:block;margin-top:10px;font-size:13px;color:var(--dim)}
+.fld input{display:block;width:100%;margin-top:4px;background:var(--bg);border:1px solid var(--ln);border-radius:10px;
+  padding:10px 12px;color:var(--tx);font:inherit;font-size:14px}
+.fld input:focus{outline:none;border-color:var(--acc)}
+.help{font-size:13px;color:var(--dim);margin:8px 0 0;line-height:1.6}
+.cloud{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--dim);vertical-align:middle}
+.cloud.ok{background:var(--good)} .cloud.busy{background:var(--warn)} .cloud.err{background:var(--bad)}
+@media (max-width:420px){.modes,.cats{grid-template-columns:1fr}.ctrl{grid-template-columns:44px 1fr 1fr 44px;gap:8px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+// [หมวด, sign, โรค, คำอธิบายสั้น, ★]
+const CATS = [
+  {id:'cv',    name:'หัวใจและหลอดเลือด', icon:'❤️', hue:'#ff7b72'},
+  {id:'resp',  name:'ระบบหายใจ',         icon:'🫁', hue:'#5eb3ff'},
+  {id:'gi',    name:'ทางเดินอาหารและตับ', icon:'🍽️', hue:'#ffb454'},
+  {id:'renal', name:'ไตและปัสสาวะ',      icon:'💧', hue:'#7ee0c0'},
+  {id:'endo',  name:'ต่อมไร้ท่อ',         icon:'🦋', hue:'#d2a8ff'},
+  {id:'heme',  name:'โลหิตวิทยา',        icon:'🩸', hue:'#ff9bce'},
+  {id:'rheum', name:'รูมาติสซั่ม',        icon:'🦴', hue:'#e3b341'},
+  {id:'neuro', name:'ประสาทวิทยา',       icon:'🧠', hue:'#a5d6ff'},
+  {id:'id',    name:'โรคติดเชื้อ',        icon:'🦠', hue:'#7ee787'},
+  {id:'crit',  name:'Criteria อายุรกรรม',  icon:'📋', hue:'#79c0ff', kind:'crit'},
+  {id:'psy',   name:'Criteria จิตเวช (DSM-5)', icon:'🧩', hue:'#f0a6ff', kind:'crit'}
+];
+
+const RAW = [
+// ---------------- หัวใจ ----------------
+['cv','Pulsus parvus et tardus','Severe aortic stenosis','ชีพจรเบาและขึ้นช้า เพราะเลือดต้องบีบผ่านลิ้นที่ตีบแคบนานขึ้น · คลำที่ carotid ชัดที่สุด · ผู้สูงอายุหลอดเลือดแข็งอาจไม่เจอ',0],
+['cv','Water-hammer (Corrigan) pulse','Aortic regurgitation','ชีพจรพุ่งขึ้นแรงแล้วตกวูบ เพราะ stroke volume มากแล้วเลือดไหลย้อนกลับ LV ช่วง diastole · pulse pressure กว้าง',0],
+['cv','de Musset sign','Aortic regurgitation','ศีรษะผงกตามจังหวะชีพจร',0],
+['cv','Quincke sign','Aortic regurgitation','กดปลายเล็บเบา ๆ แล้วเห็นเส้นเลือดฝอยใต้เล็บเต้นตามชีพจร',0],
+['cv','Duroziez sign','Aortic regurgitation','ใช้หูฟังกด femoral artery แล้วได้ยิน to-and-fro murmur',0],
+['cv','Traube sign (pistol shot)','Aortic regurgitation','ได้ยินเสียงแหลมคล้ายยิงปืนเหนือ femoral artery',0],
+['cv','Austin Flint murmur','Severe aortic regurgitation','Mid-diastolic rumble ที่ apex เพราะเลือดที่ย้อนจาก aorta ไปกระแทก anterior mitral leaflet',0],
+['cv','Pulsus bisferiens','AR, combined AS + AR, HOCM','ชีพจรมีสองยอดในหนึ่ง systole',0],
+['cv','Pulsus alternans','Severe LV systolic dysfunction','ชีพจรแรงสลับเบาทุกครั้ง ทั้งที่จังหวะสม่ำเสมอ',0],
+['cv','Beck triad','Cardiac tamponade','Hypotension + JVD + heart sound เบา',0],
+['cv','Pulsus paradoxus','Cardiac tamponade','SBP ลดลงมากกว่า 10 mmHg ตอนหายใจเข้า · พบใน severe asthma และ COPD ได้ด้วย',0],
+['cv','Electrical alternans','Large pericardial effusion / tamponade','QRS สูงต่ำสลับกันเพราะหัวใจแกว่งไปมาในน้ำ',0],
+['cv','Kussmaul sign','Constrictive pericarditis','JVP สูงขึ้นตอนหายใจเข้าแทนที่จะลดลง · ระวังสับสนกับ Kussmaul breathing ของ DKA',0],
+['cv','Pericardial knock','Constrictive pericarditis','เสียงแหลมต้น diastole เพราะเลือดไหลเข้า ventricle แล้วหยุดกะทันหันเมื่อชนเยื่อหุ้มหัวใจที่แข็ง',0],
+['cv','Diffuse ST elevation + PR depression','Acute pericarditis','ST ยกแบบเว้าขึ้นหลาย lead ไม่ตรงตามเส้นเลือด · ฟังได้ pericardial friction rub',0],
+['cv','Opening snap + mid-diastolic rumble','Mitral stenosis','Opening snap ยิ่งใกล้ S2 ยิ่งตีบมาก',0],
+['cv','Tumor plop','Atrial myxoma','เสียงต้น diastole จากก้อนตกลงผ่าน mitral valve · อาการเปลี่ยนตามท่าทาง',0],
+['cv','Mid-systolic click','Mitral valve prolapse','คลิกมาเร็วขึ้นเมื่อยืนหรือทำ Valsalva',0],
+['cv','Fixed split S2','Atrial septal defect','S2 แยกกว้างเท่าเดิมทั้งหายใจเข้าและออก',0],
+['cv','Paradoxical split S2','LBBB, severe aortic stenosis','S2 แยกตอนหายใจออก และแคบลงตอนหายใจเข้า',0],
+['cv','Carvallo sign','Tricuspid regurgitation','Murmur ดังขึ้นตอนหายใจเข้า เพราะเลือดกลับเข้าหัวใจขวามากขึ้น',0],
+['cv','Continuous machinery murmur','Patent ductus arteriosus','ดังต่อเนื่องทั้ง systole และ diastole ที่ใต้กระดูกไหปลาร้าซ้าย',0],
+['cv','Radio-femoral delay','Coarctation of aorta','ชีพจรที่ขาหนีบมาช้าและเบากว่าข้อมือ · ความดันแขนสูงกว่าขา',0],
+['cv','Rib notching / "3 sign" on CXR','Coarctation of aorta','ขอบล่างซี่โครงกร่อนจาก collateral intercostal arteries',0],
+['cv','Osler node','Infective endocarditis','ตุ่มนูน **เจ็บ** ที่ปลายนิ้ว จาก immune complex',0],
+['cv','Janeway lesion','Infective endocarditis','จุดแดงแบน **ไม่เจ็บ** ที่ฝ่ามือฝ่าเท้า จาก septic emboli',0],
+['cv','Roth spot','Infective endocarditis','จุดเลือดออกที่จอตาตรงกลางสีขาว · พบใน leukemia และซีดรุนแรงได้ด้วย',0],
+['cv','Splinter hemorrhage','Infective endocarditis','เส้นเลือดออกแนวยาวใต้เล็บ · พบจากการบาดเจ็บได้บ่อย',0],
+['cv','Delta wave + short PR','Wolff-Parkinson-White','QRS ขึ้นลาดช้าเพราะ accessory pathway นำไฟฟ้าก่อน AV node',1],
+['cv','Osborn (J) wave','Hypothermia','คลื่นนูนที่ J point',0],
+['cv','Coved ST elevation V1–V2','Brugada syndrome','ST ยกโค้งลงตามด้วย T หัวกลับ · สาเหตุของไหลตาย',0],
+['cv','Wellens sign','Critical proximal LAD stenosis','T wave หัวกลับลึกหรือ biphasic ใน V2–V3 ช่วงที่ไม่เจ็บอก · เสี่ยง anterior MI ใหญ่',0],
+['cv','Peaked T wave','Hyperkalemia','T สูงแหลมฐานแคบ เป็นความผิดปกติแรกที่มักเห็น',0],
+['cv','Prominent U wave','Hypokalemia','คลื่นเล็กหลัง T ร่วมกับ ST ต่ำ',0],
+['cv','S1Q3T3','Pulmonary embolism','Sensitivity ต่ำ · ความผิดปกติที่พบบ่อยที่สุดใน PE คือ sinus tachycardia',0],
+
+// ---------------- ระบบหายใจ ----------------
+['resp','Trachea เบี่ยงออก + เคาะโปร่ง + เสียงหายใจหาย + ความดันตก','Tension pneumothorax','วินิจฉัยทางคลินิก เจาะระบายทันทีโดยไม่ต้องรอฟิล์ม',0],
+['resp','Deep sulcus sign','Pneumothorax (ฟิล์มท่านอน)','มุม costophrenic ลึกและโปร่งผิดปกติ',0],
+['resp','Westermark sign','Pulmonary embolism','ปอดบางส่วนดำโล่งเพราะเลือดไปเลี้ยงลดลง',0],
+['resp','Hampton hump','Pulmonary embolism','เงาทึบรูปลิ่มติดเยื่อหุ้มปอด จาก pulmonary infarction',0],
+['resp','Kerley B lines','Interstitial pulmonary edema','เส้นสั้นแนวนอนที่ขอบปอดส่วนล่าง',0],
+['resp','Bat-wing appearance','Alveolar pulmonary edema','เงาทึบรอบขั้วปอดสองข้างคล้ายปีกค้างคาว',0],
+['resp','Air crescent (Monod) sign','Aspergilloma','ลมเป็นรูปเสี้ยวรอบก้อนเชื้อราในโพรงปอดเดิม',0],
+['resp','Halo sign','Invasive aspergillosis','ก้อนล้อมด้วยวง ground-glass จากเลือดออก ในผู้ป่วยภูมิคุ้มกันต่ำ',0],
+['resp','Egg-shell calcification ของต่อมน้ำเหลืองขั้วปอด','Silicosis','พบใน sarcoidosis ได้ด้วย',0],
+['resp','Ghon complex','Primary tuberculosis','Ghon focus ในเนื้อปอดร่วมกับต่อมน้ำเหลืองขั้วปอด',0],
+['resp','Velcro crackles','Idiopathic pulmonary fibrosis','Crackles ละเอียดปลายหายใจเข้า เสียงเหมือนแกะตีนตุ๊กแก',0],
+['resp','Charcot-Leyden crystals','Asthma','ผลึกจาก eosinophil ในเสมหะ',0],
+['resp','Curschmann spirals','Asthma','เมือกเป็นเกลียวจากหลอดลมฝอย',0],
+['resp','Pemberton sign','SVC obstruction / retrosternal goiter','ยกแขนสองข้างขึ้นแล้วหน้าแดงคั่ง',0],
+['resp','Horner syndrome + ปวดไหล่ร้าวแขน','Pancoast tumor','มะเร็งที่ยอดปอดกด sympathetic chain และ brachial plexus',0],
+['resp','Hypertrophic osteoarthropathy + clubbing','Lung cancer (adenocarcinoma)','ปวดข้อและกระดูกยาวร่วมกับนิ้วปุ้ม',0],
+
+// ---------------- ทางเดินอาหารและตับ ----------------
+['gi','Murphy sign','Acute cholecystitis','กดใต้ชายโครงขวาแล้วผู้ป่วยหยุดหายใจเข้ากลางคัน',0],
+['gi','Courvoisier sign','มะเร็งหัวตับอ่อน / ท่อน้ำดีส่วนปลาย','คลำถุงน้ำดีได้ ไม่เจ็บ + ตัวเหลือง · นิ่วมักไม่ทำให้ถุงน้ำดีโตเพราะอักเสบเรื้อรังจนแข็ง',0],
+['gi','Charcot triad','Ascending cholangitis','ไข้ + ปวดชายโครงขวา + ตัวเหลือง',0],
+['gi','Reynolds pentad','Severe (suppurative) cholangitis','Charcot triad + ซึมสับสน + ช็อก',0],
+['gi','Cullen sign','เลือดออกในช่องท้อง (hemorrhagic pancreatitis)','จ้ำเลือดรอบสะดือ',0],
+['gi','Grey Turner sign','เลือดออกหลังเยื่อบุช่องท้อง (hemorrhagic pancreatitis)','จ้ำเลือดที่สีข้าง',0],
+['gi','McBurney point tenderness','Acute appendicitis','กดเจ็บที่ 1/3 ของเส้นจาก ASIS ไปสะดือ',0],
+['gi','Rovsing sign','Acute appendicitis','กดท้องน้อยซ้ายแล้วเจ็บที่ท้องน้อยขวา',0],
+['gi','Psoas sign','Retrocecal appendicitis','เหยียดสะโพกขวาแล้วเจ็บ',0],
+['gi','Obturator sign','Pelvic appendicitis','งอและหมุนสะโพกขวาเข้าในแล้วเจ็บ',0],
+['gi','Kehr sign','Splenic rupture','ปวดร้าวไหล่ซ้าย จากเลือดระคายกระบังลม',0],
+['gi','Virchow node (Troisier sign)','มะเร็งในช่องท้อง (มักเป็นกระเพาะอาหาร)','ต่อมน้ำเหลืองเหนือไหปลาร้าซ้าย เพราะ thoracic duct เทลงตรงนี้',0],
+['gi','Sister Mary Joseph nodule','มะเร็งในช่องท้องกระจาย','ก้อนแข็งที่สะดือ',0],
+['gi','Blumer shelf','Peritoneal metastasis','คลำได้ก้อนแข็งผ่านการตรวจทางทวารหนักที่ rectovesical/rectouterine pouch',0],
+['gi','Krukenberg tumor','มะเร็งกระเพาะชนิด signet ring กระจายไปรังไข่','ก้อนรังไข่สองข้าง',0],
+['gi','Kayser-Fleischer ring','Wilson disease','วงสีน้ำตาลทองที่ขอบกระจกตาจากทองแดงสะสม · พบใน chronic cholestasis ได้น้อยมาก',1],
+['gi','Spider nevi','Cirrhosis','กดตรงกลางแล้วซีดทั้งวง · เกิดจาก estrogen สูง',0],
+['gi','Caput medusae','Portal hypertension','หลอดเลือดดำรอบสะดือโป่ง เลือดไหลออกจากสะดือ',0],
+['gi','Asterixis','Hepatic encephalopathy','มือกระตุกตกเมื่อเหยียดข้อมือ · พบใน uremia และ CO₂ คั่งได้ด้วย',0],
+['gi','Fetor hepaticus','Hepatic failure','ลมหายใจกลิ่นหวานอับจาก dimethyl sulfide',0],
+['gi','Dermatitis herpetiformis','Celiac disease','ตุ่มน้ำคันมากที่ข้อศอก เข่า และก้น',1],
+['gi','Bird\'s beak sign','Achalasia','Barium: หลอดอาหารส่วนปลายเรียวแหลม ส่วนบนโป่ง',0],
+['gi','Corkscrew esophagus','Diffuse esophageal spasm','Barium: หลอดอาหารบิดเป็นเกลียว',0],
+['gi','Apple core lesion','Colorectal cancer','ลำไส้ตีบแคบเป็นวงพร้อมขอบยกนูน',0],
+['gi','String sign','Crohn disease','ลำไส้ terminal ileum ตีบเป็นเส้น',0],
+['gi','Lead pipe colon','Ulcerative colitis','ลำไส้ใหญ่เรียบไม่มี haustra',0],
+['gi','Thumbprinting','Ischemic colitis','ผนังลำไส้บวมเป็นรอยคล้ายนิ้วโป้ง',0],
+['gi','Coffee bean sign','Sigmoid volvulus','ลำไส้ sigmoid โป่งบิดเป็นรูปเมล็ดกาแฟ',0],
+['gi','Trousseau syndrome','Pancreatic cancer','หลอดเลือดดำอักเสบย้ายที่ไปเรื่อย ๆ (migratory thrombophlebitis)',0],
+['gi','Leser-Trélat sign','GI adenocarcinoma','Seborrheic keratosis ขึ้นจำนวนมากอย่างรวดเร็ว',0],
+
+// ---------------- ไตและปัสสาวะ ----------------
+['renal','RBC cast','Glomerulonephritis','บอกว่าเลือดในปัสสาวะมาจาก glomerulus',1],
+['renal','Dysmorphic RBC / acanthocyte','Glomerular hematuria','เม็ดเลือดแดงรูปร่างผิดปกติจากการบีบผ่าน glomerulus',0],
+['renal','WBC cast','Pyelonephritis / acute interstitial nephritis','บอกว่าการอักเสบอยู่ในเนื้อไต ไม่ใช่แค่กระเพาะปัสสาวะ',0],
+['renal','Muddy brown granular cast','Acute tubular necrosis','เซลล์ท่อไตที่ตายหลุดออกมาเป็น cast · pre-renal แท้ตะกอนจะสะอาด',0],
+['renal','Waxy / broad cast','Advanced chronic kidney disease','ท่อไตขยายและปัสสาวะไหลช้านาน',0],
+['renal','Maltese cross (oval fat bodies)','Nephrotic syndrome','ไขมันในปัสสาวะ เห็นเป็นกากบาทใต้ polarized light',0],
+['renal','Hexagonal crystals','Cystinuria','ผลึกหกเหลี่ยม',0],
+['renal','Envelope-shaped crystals','Calcium oxalate (ethylene glycol poisoning)','ผลึกรูปซองจดหมาย',0],
+
+// ---------------- ต่อมไร้ท่อ ----------------
+['endo','Chvostek sign','Hypocalcemia','เคาะ facial nerve หน้าหูแล้วมุมปากกระตุก',0],
+['endo','Trousseau sign','Hypocalcemia','พันผ้าวัดความดันสูงกว่า SBP 3 นาทีแล้วมือเกร็ง · ไวและจำเพาะกว่า Chvostek',0],
+['endo','Pretibial myxedema','Graves disease','ผิวหน้าแข้งหนานูนแข็ง',1],
+['endo','Graves ophthalmopathy','Graves disease','ตาโปน · แยก Graves จาก hyperthyroid สาเหตุอื่น (lid lag พบได้ใน hyperthyroid ทุกแบบ)',1],
+['endo','Delayed relaxation of ankle reflex (Woltman sign)','Hypothyroidism','รีเฟล็กซ์คลายตัวช้า',0],
+['endo','Wide purple striae (> 1 cm)','Cushing syndrome','ร่วมกับ proximal myopathy และช้ำง่าย ช่วยแยกจากอ้วนธรรมดาได้ดีที่สุด',0],
+['endo','Hyperpigmentation ที่ร่องฝ่ามือและกระพุ้งแก้ม','Primary adrenal insufficiency (Addison)','ACTH สูงไปกระตุ้น melanocyte · secondary ไม่มีอาการนี้',0],
+['endo','Acanthosis nigricans','Insulin resistance','ผิวคล้ำหนาที่คอและรักแร้ · ถ้าขึ้นเร็วในผู้สูงอายุให้นึกถึงมะเร็งกระเพาะ',0],
+['endo','Necrobiosis lipoidica','Diabetes mellitus','ผื่นเหลืองมันวาวที่หน้าแข้ง',0],
+['endo','Kussmaul breathing + fruity breath','Diabetic ketoacidosis','หายใจลึกเร็วชดเชยภาวะเลือดเป็นกรด',0],
+['endo','Bitemporal hemianopia','Pituitary adenoma','ก้อนกด optic chiasm ตรงกลาง',0],
+['endo','Salt-and-pepper skull','Primary hyperparathyroidism','ร่วมกับ subperiosteal resorption ด้าน radial ของ middle phalanx',0],
+['endo','Coarse facies + มือเท้าโต + macroglossia','Acromegaly','ใส่แหวนหรือรองเท้าเดิมไม่ได้',0],
+
+// ---------------- โลหิตวิทยา ----------------
+['heme','Koilonychia','Iron deficiency anemia','เล็บแอ่นเป็นรูปช้อน',0],
+['heme','Plummer-Vinson syndrome','Iron deficiency anemia','ซีดจากขาดเหล็ก + esophageal web + กลืนลำบาก',0],
+['heme','Hypersegmented neutrophil','Megaloblastic anemia (B12 / folate)','นิวเคลียสมีตั้งแต่ 5 lobes ขึ้นไป',0],
+['heme','Schistocyte','Microangiopathic hemolytic anemia','พบใน TTP, HUS, DIC',0],
+['heme','Bite cell + Heinz body','G6PD deficiency','Heinz body คือ hemoglobin ตกตะกอน ถูกม้ามกัดออกเป็น bite cell',0],
+['heme','Spherocyte','Hereditary spherocytosis / AIHA','แยกสองโรคด้วย direct antiglobulin test',0],
+['heme','Target cell','Thalassemia, HbE, โรคตับ','เม็ดเลือดแดงมีจุดกลางเหมือนเป้ายิง',0],
+['heme','Teardrop cell','Myelofibrosis','เม็ดเลือดแดงรูปหยดน้ำ',0],
+['heme','Smudge cell','Chronic lymphocytic leukemia','Lymphocyte เปราะแตกตอนทำสไลด์',0],
+['heme','Auer rod','Acute myeloid leukemia','แท่งสีชมพูใน blast · ถ้าเป็นมัดเรียก faggot cell พบใน APL (M3)',1],
+['heme','Reed-Sternberg cell','Hodgkin lymphoma','เซลล์นิวเคลียสคู่เหมือนตานกฮูก',1],
+['heme','Pel-Ebstein fever','Hodgkin lymphoma','ไข้เป็นรอบ ๆ สลับกับช่วงไม่มีไข้',0],
+['heme','ปวดต่อมน้ำเหลืองหลังดื่มแอลกอฮอล์','Hodgkin lymphoma','พบไม่บ่อยแต่จำเพาะ',0],
+['heme','Basophilic stippling','Lead poisoning','จุดสีน้ำเงินในเม็ดเลือดแดง · พบใน thalassemia ได้ด้วย',0],
+['heme','Howell-Jolly body','Asplenia','เศษนิวเคลียสในเม็ดเลือดแดงที่ม้ามไม่ได้กรองออก',0],
+['heme','Gum hypertrophy','AML M4 / M5 (monocytic)','เซลล์มะเร็งแทรกซึมเหงือก',0],
+['heme','TTP pentad','Thrombotic thrombocytopenic purpura','ไข้ + MAHA + เกล็ดเลือดต่ำ + อาการทางสมอง + ไตเสีย',0],
+
+// ---------------- รูมาติสซั่ม ----------------
+['rheum','Malar rash ไม่ลามร่องแก้ม','Systemic lupus erythematosus','ผื่นรูปผีเสื้อที่ไม่ข้าม nasolabial fold',0],
+['rheum','Gottron papules','Dermatomyositis','ตุ่มนูนแดงม่วงหลังข้อนิ้ว',1],
+['rheum','Heliotrope rash','Dermatomyositis','ผื่นม่วงรอบเปลือกตาบน',0],
+['rheum','Mechanic\'s hands','Antisynthetase syndrome','ผิวด้านแตกที่ข้างนิ้ว',0],
+['rheum','Swan-neck & boutonnière deformity','Rheumatoid arthritis','นิ้วผิดรูปจากเส้นเอ็นและข้อถูกทำลาย',0],
+['rheum','Ulnar deviation + rheumatoid nodule','Rheumatoid arthritis','นิ้วเบนไปทางนิ้วก้อยที่ข้อ MCP',0],
+['rheum','Heberden node','Osteoarthritis','ปุ่มกระดูกที่ข้อ DIP',0],
+['rheum','Bouchard node','Osteoarthritis','ปุ่มกระดูกที่ข้อ PIP',0],
+['rheum','Negatively birefringent needle-shaped crystals','Gout','ผลึกรูปเข็ม · เป็นวิธีวินิจฉัยมาตรฐาน',1],
+['rheum','Tophi','Chronic tophaceous gout','ก้อน urate ใต้ผิวหนัง ใบหู ข้อศอก',0],
+['rheum','Positively birefringent rhomboid crystals','CPPD (pseudogout)','ผลึกรูปสี่เหลี่ยมขนมเปียกปูน',0],
+['rheum','Chondrocalcinosis','CPPD','หินปูนเกาะกระดูกอ่อนบนฟิล์ม โดยเฉพาะเข่า',0],
+['rheum','Bamboo spine','Ankylosing spondylitis','กระดูกสันหลังเชื่อมกันเป็นปล้องไม้ไผ่',0],
+['rheum','Reduced Schober test','Ankylosing spondylitis','ก้มแล้วระยะหลังส่วนล่างยืดได้น้อยกว่า 5 cm',0],
+['rheum','Dactylitis (sausage digit)','Psoriatic arthritis','นิ้วบวมทั้งนิ้ว · พบใน reactive arthritis ได้ด้วย',0],
+['rheum','Pencil-in-cup deformity','Psoriatic arthritis','ปลายกระดูกกร่อนแหลมเสียบเข้าถ้วย',0],
+['rheum','CREST','Limited systemic sclerosis','Calcinosis, Raynaud, Esophageal dysmotility, Sclerodactyly, Telangiectasia',0],
+['rheum','Saddle nose','Granulomatosis with polyangiitis','ดั้งจมูกยุบ · พบใน relapsing polychondritis และ syphilis ได้ด้วย',0],
+['rheum','Pathergy test positive','Behçet disease','เข็มจิ้มผิวแล้วเกิดตุ่มหนอง',0],
+['rheum','Apple-green birefringence ใน Congo red','Amyloidosis','ย้อมเนื้อเยื่อแล้วส่อง polarized light',1],
+
+// ---------------- ประสาทวิทยา ----------------
+['neuro','Babinski sign','Upper motor neuron lesion','ขีดฝ่าเท้าแล้วนิ้วโป้งกระดกขึ้น',0],
+['neuro','Kernig sign','Meningeal irritation','งอสะโพกแล้วเหยียดเข่าไม่ได้เพราะเจ็บ',0],
+['neuro','Brudzinski sign','Meningeal irritation','ก้มคอแล้วสะโพกและเข่างอตาม',0],
+['neuro','Thunderclap headache','Subarachnoid hemorrhage','ปวดหัวรุนแรงที่สุดในชีวิต ถึงจุดสูงสุดภายในนาที',0],
+['neuro','Resting pill-rolling tremor','Parkinson disease','สั่นตอนพัก ลดลงเมื่อเคลื่อนไหว · มักเริ่มข้างเดียว',0],
+['neuro','Cogwheel rigidity','Parkinson disease','แข็งเกร็งเป็นจังหวะเหมือนฟันเฟือง',0],
+['neuro','Argyll Robertson pupil','Neurosyphilis','รูม่านตาหดเมื่อมองใกล้ แต่ไม่หดตอบสนองต่อแสง · พบใน DM ได้ด้วย',0],
+['neuro','Relative afferent pupillary defect (Marcus Gunn)','Optic neuritis / optic nerve lesion','Swinging flashlight แล้วรูม่านตาข้างที่ป่วยขยายออก',0],
+['neuro','Bilateral internuclear ophthalmoplegia','Multiple sclerosis','ในคนอายุน้อย · คนสูงอายุมักเป็นจาก stroke',0],
+['neuro','Lhermitte sign','Multiple sclerosis','ก้มคอแล้วรู้สึกไฟช็อตวิ่งลงหลัง',0],
+['neuro','Uhthoff phenomenon','Multiple sclerosis','อาการแย่ลงชั่วคราวเมื่อร่างกายร้อน',0],
+['neuro','Romberg sign','Sensory ataxia (dorsal column)','ยืนเท้าชิดแล้วล้มเมื่อหลับตา · เช่น B12 deficiency, tabes dorsalis',0],
+['neuro','Horner syndrome','Sympathetic pathway lesion','Ptosis + miosis + anhidrosis · นึกถึง Pancoast และ carotid dissection',0],
+['neuro','Fatigable ptosis + ice-pack test','Myasthenia gravis','หนังตาตกมากขึ้นเมื่อใช้งาน ดีขึ้นเมื่อประคบเย็น',0],
+['neuro','UMN + LMN signs ร่วมกับ fasciculation โดยความรู้สึกปกติ','Amyotrophic lateral sclerosis','ไม่มีความผิดปกติของความรู้สึกและการขับถ่าย',0],
+['neuro','Wernicke triad','Wernicke encephalopathy (thiamine deficiency)','สับสน + ophthalmoplegia + ataxia · ให้ thiamine ก่อน glucose',0],
+['neuro','Albuminocytologic dissociation','Guillain-Barré syndrome','CSF โปรตีนสูงแต่เซลล์ปกติ + อ่อนแรงขึ้นจากขาร่วมกับ areflexia',0],
+['neuro','Ophthalmoplegia + ataxia + areflexia','Miller Fisher syndrome','ตรวจพบ anti-GQ1b',0],
+['neuro','Gowers sign','Duchenne muscular dystrophy','ต้องใช้มือดันขาขึ้นเพื่อลุกยืน',0],
+['neuro','Grip / percussion myotonia','Myotonic dystrophy','กำมือแล้วคลายช้า เคาะกล้ามเนื้อแล้วหดค้าง',0],
+
+// ---------------- โรคติดเชื้อ ----------------
+['id','Koplik spots','Measles','จุดขาวบนกระพุ้งแก้มขึ้นก่อนผื่น',1],
+['id','Negri bodies','Rabies','Inclusion ใน neuron ของ hippocampus และ Purkinje cell',1],
+['id','Hydrophobia / aerophobia','Rabies','กลืนน้ำหรือโดนลมแล้วกล้ามเนื้อคอหอยกระตุก',0],
+['id','Eschar','Scrub typhus','แผลไหม้สีดำไม่เจ็บ มักซ่อนอยู่ในซอกพับ ต้องตรวจทั่วตัว',0],
+['id','Conjunctival suffusion + calf tenderness','Leptospirosis','ตาแดงโดยไม่มีขี้ตา ร่วมกับเจ็บน่อง',0],
+['id','Herman rash ("white islands in a sea of red")','Dengue (ระยะฟื้นตัว)','ผื่นแดงทั่วตัวมีวงผิวปกติเป็นเกาะ ๆ',0],
+['id','Tourniquet test positive','Dengue','จุดเลือดออกตั้งแต่ 10 จุดต่อตารางนิ้ว',0],
+['id','Safety-pin bipolar staining','Melioidosis (Burkholderia pseudomallei)','ติดสีหัวท้ายเหมือนเข็มกลัด · Yersinia pestis ติดสีแบบนี้ได้ด้วย',0],
+['id','Rose spots','Typhoid fever','ผื่นแดงจาง ๆ ที่หน้าท้องและหน้าอก',0],
+['id','Relative bradycardia (Faget sign)','Typhoid fever','ไข้สูงแต่ชีพจรไม่เร็วตาม',0],
+['id','Trismus + risus sardonicus + opisthotonus','Tetanus','อ้าปากไม่ได้ ยิ้มแสยะ หลังแอ่นเกร็ง',0],
+['id','Slapped cheek','Parvovirus B19','แก้มแดงสองข้างเหมือนถูกตบ',0],
+['id','Strawberry tongue','Scarlet fever / Kawasaki disease','ลิ้นแดงมีตุ่มนูน',0],
+['id','Painless chancre','Primary syphilis','แผลขอบแข็งไม่เจ็บ',0],
+['id','India ink capsule','Cryptococcus neoformans','เห็นแคปซูลใสรอบเชื้อใน CSF',0],
+['id','Owl\'s eye inclusion','Cytomegalovirus','Inclusion ในนิวเคลียสล้อมด้วยวงใส',0],
+['id','Sulfur granules','Actinomycosis','เม็ดสีเหลืองในหนองจากโพรงหนอง',0],
+['id','Clue cells','Bacterial vaginosis','เซลล์เยื่อบุมีแบคทีเรียเกาะจนขอบไม่ชัด',0],
+['id','Spaghetti and meatballs (KOH)','Tinea versicolor (Malassezia)','เส้นใยกับสปอร์กลมปนกัน',0],
+
+// ---------------- Criteria อายุรกรรม ----------------
+['crit','Modified Duke criteria','Infective endocarditis',
+'# Major\n'+
+'1. Blood culture บวก: เชื้อที่พบบ่อยใน IE จาก 2 ขวดแยกกัน (viridans strep, S. gallolyticus, HACEK, S. aureus, enterococcus ที่ไม่มีแหล่งอื่น) หรือขึ้นต่อเนื่อง หรือ Coxiella 1 ขวด / phase I IgG > 1:800\n'+
+'2. หลักฐานที่ลิ้นหัวใจ: echo พบ vegetation, abscess, ลิ้นเทียมหลุดใหม่ หรือมี valvular regurgitation ใหม่\n'+
+'# Minor\n'+
+'1. Predisposition: โรคหัวใจเดิม หรือฉีดยาเสพติด\n'+
+'2. ไข้ ≥ 38 °C\n'+
+'3. Vascular: major arterial emboli, septic pulmonary infarct, mycotic aneurysm, ICH, conjunctival hemorrhage, Janeway lesion\n'+
+'4. Immunologic: glomerulonephritis, Osler node, Roth spot, rheumatoid factor\n'+
+'5. Blood culture บวกแต่ไม่เข้าเกณฑ์ major\n'+
+'# วินิจฉัย\n'+
+'Definite = 2 major · 1 major + 3 minor · 5 minor\n'+
+'Possible = 1 major + 1 minor · 3 minor',0],
+
+['crit','Jones criteria (revised 2015)','Acute rheumatic fever',
+'# ต้องมีหลักฐานการติดเชื้อ Group A strep ก่อนหน้า\n'+
+'(ASO สูง / throat culture หรือ rapid antigen บวก)\n'+
+'# Major — J♥NES\n'+
+'Joints (arthritis) · ♥ Carditis (รวม subclinical จาก echo) · Nodules (subcutaneous) · Erythema marginatum · Sydenham chorea\n'+
+'# Minor\n'+
+'Fever · Arthralgia · ESR / CRP สูง · PR interval ยาว\n'+
+'# วินิจฉัย\n'+
+'ครั้งแรก = 2 major หรือ 1 major + 2 minor\n'+
+'เป็นซ้ำ = 2 major · 1 major + 2 minor · 3 minor\n'+
+'ในประชากรเสี่ยงปานกลาง–สูง monoarthritis หรือ polyarthralgia นับเป็น major ได้',0],
+
+['crit','SIRS criteria','Systemic inflammatory response',
+'ตั้งแต่ 2 ใน 4 ข้อ\n'+
+'1. อุณหภูมิ > 38 °C หรือ < 36 °C\n'+
+'2. HR > 90/min\n'+
+'3. RR > 20/min หรือ PaCO₂ < 32 mmHg\n'+
+'4. WBC > 12,000 หรือ < 4,000/µL หรือ band > 10%',0],
+
+['crit','qSOFA','คัดกรองผู้ป่วยติดเชื้อที่เสี่ยงเสียชีวิต (นอก ICU)',
+'ตั้งแต่ 2 ใน 3 ข้อ = เสี่ยงสูง\n'+
+'1. RR ≥ 22/min\n'+
+'2. Altered mentation (GCS < 15)\n'+
+'3. SBP ≤ 100 mmHg',0],
+
+['crit','Sepsis-3 definition','Sepsis และ septic shock',
+'# Sepsis\n'+
+'Life-threatening organ dysfunction จาก dysregulated host response ต่อการติดเชื้อ\n'+
+'Organ dysfunction = SOFA เพิ่มขึ้น ≥ 2 คะแนน\n'+
+'# Septic shock\n'+
+'ต้องใช้ vasopressor เพื่อคง MAP ≥ 65 mmHg\n'+
+'และ lactate > 2 mmol/L แม้ให้สารน้ำเพียงพอแล้ว',0],
+
+['crit','Light\'s criteria','Pleural effusion ชนิด exudate',
+'เป็น exudate ถ้ามีอย่างน้อย 1 ข้อ\n'+
+'1. Pleural protein / serum protein > 0.5\n'+
+'2. Pleural LDH / serum LDH > 0.6\n'+
+'3. Pleural LDH > 2/3 ของ upper limit ของ serum LDH\n'+
+'# ระวัง\n'+
+'ผู้ป่วย HF ที่ได้ยาขับปัสสาวะอาจถูกจัดเป็น exudate ผิด → ดู serum–pleural albumin gradient > 1.2 g/dL ว่าเป็น transudate',0],
+
+['crit','CURB-65','ความรุนแรงของ community-acquired pneumonia',
+'ข้อละ 1 คะแนน\n'+
+'C — Confusion\n'+
+'U — Urea > 7 mmol/L (BUN > 19 mg/dL)\n'+
+'R — RR ≥ 30/min\n'+
+'B — SBP < 90 หรือ DBP ≤ 60 mmHg\n'+
+'65 — อายุ ≥ 65 ปี\n'+
+'# แปลผล\n'+
+'0–1 รักษาแบบผู้ป่วยนอก · 2 พิจารณานอนโรงพยาบาล · ≥ 3 รุนแรง (4–5 พิจารณา ICU)',0],
+
+['crit','Wells score for PE','ความน่าจะเป็นของ pulmonary embolism',
+'อาการแสดงของ DVT — 3\n'+
+'PE เป็นการวินิจฉัยที่น่าจะเป็นที่สุด — 3\n'+
+'HR > 100 — 1.5\n'+
+'นอนติดเตียง ≥ 3 วัน หรือผ่าตัดใน 4 สัปดาห์ — 1.5\n'+
+'เคยเป็น DVT / PE — 1.5\n'+
+'ไอเป็นเลือด — 1\n'+
+'มะเร็ง — 1\n'+
+'# แปลผล\n'+
+'> 4 = PE likely → CTPA\n'+
+'≤ 4 = PE unlikely → D-dimer ก่อน',0],
+
+['crit','CHA₂DS₂-VASc','ความเสี่ยง stroke ใน atrial fibrillation',
+'C — CHF 1\n'+
+'H — Hypertension 1\n'+
+'A₂ — อายุ ≥ 75 ปี 2\n'+
+'D — Diabetes 1\n'+
+'S₂ — Stroke / TIA / thromboembolism 2\n'+
+'V — Vascular disease (MI, PAD, aortic plaque) 1\n'+
+'A — อายุ 65–74 ปี 1\n'+
+'Sc — เพศหญิง 1\n'+
+'# แปลผล\n'+
+'ชาย ≥ 2 / หญิง ≥ 3 → ให้ยาต้านการแข็งตัวของเลือด\n'+
+'ชาย 1 / หญิง 2 → พิจารณา',0],
+
+['crit','HAS-BLED','ความเสี่ยงเลือดออกจากยาต้านการแข็งตัวของเลือด',
+'H — Hypertension ที่คุมไม่ได้ (SBP > 160)\n'+
+'A — การทำงานของไตหรือตับผิดปกติ (ข้อละ 1)\n'+
+'S — Stroke\n'+
+'B — เคยมีเลือดออก หรือมีแนวโน้มเลือดออก\n'+
+'L — Labile INR\n'+
+'E — Elderly อายุ > 65 ปี\n'+
+'D — Drugs (antiplatelet / NSAID) หรือ alcohol (ข้อละ 1)\n'+
+'# แปลผล\n'+
+'≥ 3 = เสี่ยงสูง → แก้ปัจจัยที่แก้ได้และติดตามใกล้ชิด ไม่ใช่เหตุผลให้งดยา',0],
+
+['crit','Framingham criteria','Congestive heart failure',
+'# Major\n'+
+'PND · JVD · rales · cardiomegaly · acute pulmonary edema · S3 gallop · CVP > 16 cmH₂O · hepatojugular reflux · น้ำหนักลด ≥ 4.5 kg ใน 5 วันหลังให้ยาขับปัสสาวะ\n'+
+'# Minor\n'+
+'ขาบวม · ไอตอนกลางคืน · เหนื่อยเวลาออกแรงปกติ · ตับโต · pleural effusion · vital capacity ลดลง 1/3 · HR ≥ 120\n'+
+'# วินิจฉัย\n'+
+'2 major หรือ 1 major + 2 minor\n'+
+'(minor นับได้เมื่ออธิบายด้วยโรคอื่นไม่ได้)',0],
+
+['crit','KDIGO AKI','Acute kidney injury',
+'# นิยาม (ข้อใดข้อหนึ่ง)\n'+
+'SCr เพิ่ม ≥ 0.3 mg/dL ภายใน 48 ชม.\n'+
+'SCr เพิ่ม ≥ 1.5 เท่าของ baseline ภายใน 7 วัน\n'+
+'Urine output < 0.5 mL/kg/h นาน 6 ชม.\n'+
+'# Staging\n'+
+'Stage 1: SCr 1.5–1.9 เท่า หรือเพิ่ม ≥ 0.3 · UO < 0.5 นาน 6–12 ชม.\n'+
+'Stage 2: SCr 2.0–2.9 เท่า · UO < 0.5 ≥ 12 ชม.\n'+
+'Stage 3: SCr ≥ 3 เท่า หรือ ≥ 4.0 mg/dL หรือเริ่ม RRT · UO < 0.3 ≥ 24 ชม. หรือ anuria ≥ 12 ชม.',0],
+
+['crit','Revised Atlanta criteria','Acute pancreatitis',
+'ตั้งแต่ 2 ใน 3 ข้อ\n'+
+'1. ปวดท้องแบบตับอ่อนอักเสบ (ลิ้นปี่ ร้าวไปหลัง)\n'+
+'2. Lipase หรือ amylase ≥ 3 เท่าของค่าปกติ\n'+
+'3. ภาพรังสีเข้าได้ (CT / MRI / US)',0],
+
+['crit','Diagnosis of diabetes (ADA)','Diabetes mellitus',
+'ข้อใดข้อหนึ่ง\n'+
+'1. FPG ≥ 126 mg/dL (อดอาหาร ≥ 8 ชม.)\n'+
+'2. 2-h PG ≥ 200 mg/dL จาก 75 g OGTT\n'+
+'3. HbA1c ≥ 6.5%\n'+
+'4. Random PG ≥ 200 mg/dL ร่วมกับอาการ (ปัสสาวะบ่อย กระหายน้ำ น้ำหนักลด)\n'+
+'# ข้อ 1–3 ต้องยืนยันซ้ำ\n'+
+'ยกเว้นมีภาวะน้ำตาลสูงชัดเจนทางคลินิก',0],
+
+['crit','DKA criteria','Diabetic ketoacidosis',
+'# ADA (คลาสสิก)\n'+
+'Glucose > 250 mg/dL · pH ≤ 7.30 · HCO₃ ≤ 18 · ketonemia / ketonuria · anion gap สูง\n'+
+'# ความรุนแรง\n'+
+'Mild: pH 7.25–7.30, HCO₃ 15–18, รู้ตัวดี\n'+
+'Moderate: pH 7.00–7.24, HCO₃ 10–15, ซึม\n'+
+'Severe: pH < 7.00, HCO₃ < 10, stupor / coma\n'+
+'# Consensus 2024\n'+
+'Glucose ≥ 200 หรือเป็นเบาหวานอยู่เดิม · β-hydroxybutyrate ≥ 3.0 mmol/L · pH < 7.3 และ/หรือ HCO₃ < 18',0],
+
+['crit','HHS criteria','Hyperosmolar hyperglycemic state',
+'Glucose > 600 mg/dL\n'+
+'Effective serum osmolality > 320 mOsm/kg\n'+
+'pH > 7.30 · HCO₃ > 18\n'+
+'Ketone น้อยหรือไม่มี\n'+
+'มักซึมหรือหมดสติ',0],
+
+['crit','SIADH criteria','Syndrome of inappropriate ADH',
+'1. Hypotonic hyponatremia (serum osm < 275)\n'+
+'2. Urine osm > 100 mOsm/kg (เข้มข้นเกินควร)\n'+
+'3. Urine Na > 30 mmol/L ขณะกินเกลือปกติ\n'+
+'4. Euvolemia ทางคลินิก\n'+
+'5. ไทรอยด์และต่อมหมวกไตปกติ ไม่ได้ใช้ยาขับปัสสาวะ',0],
+
+['crit','Berlin definition','ARDS',
+'1. เกิดภายใน 1 สัปดาห์หลังเหตุกระตุ้น หรืออาการหายใจใหม่ / แย่ลง\n'+
+'2. Bilateral opacities ที่อธิบายด้วย effusion, collapse หรือก้อนไม่ได้\n'+
+'3. ภาวะหายใจล้มเหลวที่อธิบายด้วยหัวใจล้มเหลวหรือน้ำเกินไม่ได้\n'+
+'4. PaO₂/FiO₂ ≤ 300 ขณะ PEEP ≥ 5\n'+
+'# ความรุนแรง\n'+
+'Mild 200–300 · Moderate 100–200 · Severe ≤ 100',0],
+
+['crit','Nephrotic syndrome','Nephrotic syndrome',
+'1. Proteinuria > 3.5 g/วัน\n'+
+'2. Hypoalbuminemia < 3.0 g/dL\n'+
+'3. Edema\n'+
+'4. Hyperlipidemia และ lipiduria (Maltese cross)',0],
+
+['crit','Child-Pugh score','ความรุนแรงของ cirrhosis',
+'แต่ละข้อ 1 / 2 / 3 คะแนน\n'+
+'Bilirubin: < 2 / 2–3 / > 3 mg/dL\n'+
+'Albumin: > 3.5 / 2.8–3.5 / < 2.8 g/dL\n'+
+'INR: < 1.7 / 1.7–2.3 / > 2.3\n'+
+'Ascites: ไม่มี / น้อย คุมได้ / มาก\n'+
+'Encephalopathy: ไม่มี / grade 1–2 / grade 3–4\n'+
+'# Class\n'+
+'A = 5–6 · B = 7–9 · C = 10–15',0],
+
+['crit','Centor (McIsaac) score','Streptococcal pharyngitis',
+'ข้อละ 1 คะแนน\n'+
+'ไข้ > 38 °C · ไม่ไอ · ต่อมน้ำเหลืองคอด้านหน้าโตกดเจ็บ · ต่อมทอนซิลบวมหรือมีหนอง\n'+
+'อายุ 3–14 ปี +1 · อายุ ≥ 45 ปี −1\n'+
+'# แปลผล\n'+
+'0–1 ไม่ต้องตรวจหรือให้ยา · 2–3 ตรวจ rapid antigen · ≥ 4 ตรวจหรือพิจารณาให้ยา',0],
+
+['crit','Dengue warning signs (WHO 2009)','Dengue ที่เสี่ยงเป็น severe dengue',
+'1. ปวดท้องหรือกดเจ็บ\n'+
+'2. อาเจียนต่อเนื่อง\n'+
+'3. มีน้ำในช่องท้องหรือเยื่อหุ้มปอด\n'+
+'4. เลือดออกตามเยื่อบุ\n'+
+'5. ซึมหรือกระสับกระส่าย\n'+
+'6. ตับโต > 2 cm\n'+
+'7. Hct เพิ่มขึ้นพร้อมเกล็ดเลือดลดลงเร็ว',0],
+
+['crit','2010 ACR/EULAR RA criteria','Rheumatoid arthritis',
+'ได้ ≥ 6/10 = RA\n'+
+'# ข้อ (0–5)\n'+
+'ข้อใหญ่ 1 ข้อ 0 · ข้อใหญ่ 2–10 ข้อ 1 · ข้อเล็ก 1–3 ข้อ 2 · ข้อเล็ก 4–10 ข้อ 3 · > 10 ข้อ (มีข้อเล็ก ≥ 1) 5\n'+
+'# Serology (0–3)\n'+
+'RF และ ACPA ลบ 0 · บวกต่ำ 2 · บวกสูง (> 3 เท่า) 3\n'+
+'# Acute phase reactant (0–1)\n'+
+'CRP และ ESR ปกติ 0 · ผิดปกติ 1\n'+
+'# ระยะเวลา (0–1)\n'+
+'< 6 สัปดาห์ 0 · ≥ 6 สัปดาห์ 1',0],
+
+['crit','2019 EULAR/ACR SLE criteria','Systemic lupus erythematosus',
+'# Entry\n'+
+'ANA ≥ 1:80 (เคยตรวจพบ)\n'+
+'# จัดเป็น SLE\n'+
+'≥ 10 คะแนน และมี clinical criterion ≥ 1 ข้อ (นับเฉพาะคะแนนสูงสุดของแต่ละ domain)\n'+
+'# ข้อที่คะแนนสูง\n'+
+'Lupus nephritis class III / IV 10 · class II / V 8\n'+
+'Acute pericarditis 6 · joint involvement 6 · acute cutaneous lupus 6\n'+
+'Anti-dsDNA หรือ anti-Sm 6\n'+
+'Pleural / pericardial effusion 5 · seizure 5\n'+
+'C3 และ C4 ต่ำ 4 · autoimmune hemolysis 4 · เกล็ดเลือดต่ำ 4 · proteinuria > 0.5 g/วัน 4\n'+
+'# ข้อที่คะแนนต่ำ\n'+
+'ไข้ 2 · ผมร่วงไม่มีแผลเป็น 2 · แผลในปาก 2 · delirium 2 · antiphospholipid antibody 2 · leukopenia 3',0],
+
+['crit','Kawasaki disease','Kawasaki disease',
+'ไข้ ≥ 5 วัน + ตั้งแต่ 4 ใน 5 ข้อ (CRASH)\n'+
+'C — Conjunctivitis สองข้าง ไม่มีขี้ตา\n'+
+'R — Rash หลายรูปแบบ\n'+
+'A — Adenopathy ที่คอ ≥ 1.5 cm มักข้างเดียว\n'+
+'S — Strawberry tongue ปากแดงแตก\n'+
+'H — Hands / feet บวมแดง ต่อมาลอก\n'+
+'# ภาวะแทรกซ้อนสำคัญ\n'+
+'Coronary artery aneurysm',0],
+
+['crit','Metabolic syndrome (NCEP ATP III, เกณฑ์คนเอเชีย)','Metabolic syndrome',
+'ตั้งแต่ 3 ใน 5 ข้อ\n'+
+'1. รอบเอว ≥ 90 cm ชาย / ≥ 80 cm หญิง\n'+
+'2. TG ≥ 150 mg/dL\n'+
+'3. HDL < 40 ชาย / < 50 หญิง\n'+
+'4. BP ≥ 130/85 mmHg\n'+
+'5. FPG ≥ 100 mg/dL',0],
+
+['crit','Rome IV criteria','Irritable bowel syndrome',
+'ปวดท้องซ้ำ ๆ เฉลี่ย ≥ 1 วัน/สัปดาห์ ใน 3 เดือนล่าสุด\n'+
+'ร่วมกับ ≥ 2 ข้อ\n'+
+'1. สัมพันธ์กับการถ่าย\n'+
+'2. ความถี่ในการถ่ายเปลี่ยน\n'+
+'3. ลักษณะอุจจาระเปลี่ยน\n'+
+'เริ่มมีอาการ ≥ 6 เดือนก่อนวินิจฉัย',0],
+
+['crit','CAM (Confusion Assessment Method)','Delirium',
+'ต้องมีข้อ 1 + ข้อ 2 + (ข้อ 3 หรือ ข้อ 4)\n'+
+'1. Acute onset และ fluctuating course\n'+
+'2. Inattention\n'+
+'3. Disorganized thinking\n'+
+'4. Altered level of consciousness',0],
+
+// ---------------- Criteria จิตเวช (DSM-5) ----------------
+['psy','Major depressive disorder','Major depressive disorder',
+'≥ 5 ใน 9 อาการ นาน ≥ 2 สัปดาห์ ต้องมีข้อ 1 หรือ 2\n'+
+'1. Depressed mood\n'+
+'2. Anhedonia (เบื่อ ไม่สนใจสิ่งที่เคยชอบ)\n'+
+'# SIG E CAPS\n'+
+'Sleep ผิดปกติ · Interest ลดลง · Guilt / worthlessness · Energy ลดลง · Concentration ลดลง · Appetite / น้ำหนักเปลี่ยน > 5% ใน 1 เดือน · Psychomotor agitation / retardation · Suicidal ideation\n'+
+'# ต้องไม่เคยมี manic / hypomanic episode',0],
+
+['psy','Persistent depressive disorder (dysthymia)','Persistent depressive disorder',
+'Depressed mood เกือบทั้งวัน มากกว่าครึ่งของวัน นาน ≥ 2 ปี (เด็กและวัยรุ่น ≥ 1 ปี)\n'+
+'+ ≥ 2 ข้อ: เบื่ออาหารหรือกินมาก · นอนไม่หลับหรือหลับมาก · อ่อนเพลีย · self-esteem ต่ำ · สมาธิไม่ดี · สิ้นหวัง\n'+
+'ไม่เคยหายจากอาการนานเกิน 2 เดือนติดกัน',0],
+
+['psy','Manic episode','Bipolar I disorder',
+'Mood ครึกครื้น / ยิ่งใหญ่ / หงุดหงิด + พลังงานเพิ่ม นาน ≥ 1 สัปดาห์ (หรือสั้นกว่าถ้าต้องนอน รพ.)\n'+
+'+ ≥ 3 อาการ (≥ 4 ถ้า mood แค่หงุดหงิด)\n'+
+'# DIG FAST\n'+
+'Distractibility · Insomnia (ต้องการนอนน้อยลง) · Grandiosity · Flight of ideas · Activity เพิ่ม · Speech เร็วรัว · Thoughtlessness (ทำเรื่องเสี่ยง)\n'+
+'# ต้องมีอย่างใดอย่างหนึ่ง\n'+
+'สูญเสียหน้าที่อย่างมาก · ต้องนอน รพ. · มีอาการโรคจิต',0],
+
+['psy','Hypomanic episode','Bipolar II disorder (ร่วมกับ MDE)',
+'อาการแบบเดียวกับ manic (DIG FAST ≥ 3 ข้อ) นาน ≥ 4 วันติดต่อกัน\n'+
+'คนรอบข้างสังเกตเห็นความเปลี่ยนแปลง\n'+
+'แต่ไม่รุนแรงถึงเสียหน้าที่มาก ไม่ต้องนอน รพ. ไม่มีอาการโรคจิต\n'+
+'# Bipolar II\n'+
+'Hypomanic ≥ 1 ครั้ง + major depressive episode ≥ 1 ครั้ง และไม่เคยมี manic episode',0],
+
+['psy','Cyclothymic disorder','Cyclothymic disorder',
+'มีอาการ hypomanic และ depressive หลายช่วงที่ไม่ถึงเกณฑ์เต็ม\n'+
+'นาน ≥ 2 ปี (เด็ก ≥ 1 ปี)\n'+
+'ไม่เคยปลอดอาการนานเกิน 2 เดือน',0],
+
+['psy','Schizophrenia','Schizophrenia',
+'≥ 2 ใน 5 อาการ นานเกือบตลอด 1 เดือน โดยต้องมีข้อ 1, 2 หรือ 3 อย่างน้อย 1 ข้อ\n'+
+'1. Delusion\n'+
+'2. Hallucination\n'+
+'3. Disorganized speech\n'+
+'4. Grossly disorganized หรือ catatonic behavior\n'+
+'5. Negative symptoms\n'+
+'# ระยะเวลา\n'+
+'มีอาการต่อเนื่องรวม ≥ 6 เดือน (นับ prodromal และ residual) ร่วมกับหน้าที่การงานและสังคมเสื่อมลง',0],
+
+['psy','Schizophreniform disorder','Schizophreniform disorder',
+'อาการเข้าเกณฑ์ A ของ schizophrenia\n'+
+'นาน ≥ 1 เดือน แต่ < 6 เดือน\n'+
+'ไม่จำเป็นต้องมีหน้าที่เสื่อมลง',0],
+
+['psy','Brief psychotic disorder','Brief psychotic disorder',
+'มี ≥ 1 อาการ: delusion, hallucination, disorganized speech (ต้องมีอย่างน้อย 1 ใน 3 นี้) หรือ disorganized / catatonic behavior\n'+
+'นาน ≥ 1 วัน แต่ < 1 เดือน\n'+
+'กลับมาเป็นปกติเท่าเดิมทั้งหมด',0],
+
+['psy','Schizoaffective disorder','Schizoaffective disorder',
+'1. มี major mood episode เกิดพร้อมกับอาการตามเกณฑ์ A ของ schizophrenia\n'+
+'2. มี delusion หรือ hallucination ≥ 2 สัปดาห์ ในช่วงที่ไม่มี mood episode\n'+
+'3. อาการ mood มีอยู่เป็นส่วนใหญ่ของระยะเวลาที่ป่วยทั้งหมด',0],
+
+['psy','Delusional disorder','Delusional disorder',
+'Delusion ≥ 1 เรื่อง นาน ≥ 1 เดือน\n'+
+'ไม่เคยเข้าเกณฑ์ A ของ schizophrenia (ถ้ามี hallucination ต้องไม่เด่นและสัมพันธ์กับเรื่องที่หลงผิด)\n'+
+'นอกจากเรื่องที่หลงผิด หน้าที่และพฤติกรรมไม่ได้เสียมาก',0],
+
+['psy','Generalized anxiety disorder','Generalized anxiety disorder',
+'กังวลมากเกินไปหลายเรื่อง เกือบทุกวัน นาน ≥ 6 เดือน และควบคุมได้ยาก\n'+
+'+ ≥ 3 ใน 6 อาการ (เด็ก 1 อาการ)\n'+
+'กระสับกระส่าย · เหนื่อยง่าย · สมาธิไม่ดี / สมองว่าง · หงุดหงิด · กล้ามเนื้อตึง · นอนผิดปกติ',0],
+
+['psy','Panic attack','Panic attack',
+'ความกลัวพุ่งขึ้นสูงสุดภายในไม่กี่นาที + ≥ 4 ใน 13 อาการ\n'+
+'ใจสั่น · เหงื่อออก · ตัวสั่น · หายใจไม่อิ่ม · สำลัก · เจ็บแน่นอก · คลื่นไส้ · เวียนหัว · หนาวสั่นหรือร้อนวูบ · ชา · derealization / depersonalization · กลัวควบคุมตัวเองไม่ได้ · กลัวตาย',0],
+
+['psy','Panic disorder','Panic disorder',
+'Panic attack ที่เกิดซ้ำ ๆ โดยไม่คาดคิด\n'+
+'+ หลังจาก attack อย่างน้อย 1 ครั้ง มีอย่างใดอย่างหนึ่งนาน ≥ 1 เดือน\n'+
+'1. กังวลต่อเนื่องว่าจะเกิดอีกหรือกลัวผลที่ตามมา\n'+
+'2. เปลี่ยนพฤติกรรมเพื่อหลีกเลี่ยง',0],
+
+['psy','PTSD','Post-traumatic stress disorder',
+'ประสบเหตุที่คุกคามชีวิต บาดเจ็บรุนแรง หรือความรุนแรงทางเพศ (เกิดกับตัวเอง เห็น หรือรู้ว่าเกิดกับคนใกล้ชิด)\n'+
+'# 4 กลุ่มอาการ\n'+
+'Intrusion ≥ 1 · Avoidance ≥ 1 · ความคิดและอารมณ์ด้านลบ ≥ 2 · Arousal / reactivity ≥ 2\n'+
+'# ระยะเวลา\n'+
+'> 1 เดือน (ถ้า 3 วัน–1 เดือน = acute stress disorder)',0],
+
+['psy','Adjustment disorder','Adjustment disorder',
+'อาการทางอารมณ์หรือพฤติกรรมเกิดภายใน 3 เดือนหลังเผชิญ stressor\n'+
+'ทุกข์มากเกินสัดส่วน หรือเสียหน้าที่\n'+
+'ไม่เข้าเกณฑ์โรคทางจิตเวชอื่น และไม่ใช่การโศกเศร้าตามปกติ\n'+
+'อาการหายภายใน 6 เดือนหลัง stressor สิ้นสุด',0],
+
+['psy','Obsessive-compulsive disorder','Obsessive-compulsive disorder',
+'มี obsession และ/หรือ compulsion\n'+
+'กินเวลามาก (> 1 ชม./วัน) หรือทำให้ทุกข์หรือเสียหน้าที่\n'+
+'ไม่ได้เกิดจากสารหรือโรคทางกาย',0],
+
+['psy','Delirium (DSM-5)','Delirium',
+'1. ความผิดปกติของ attention และ awareness\n'+
+'2. เกิดในเวลาสั้น (ชั่วโมงถึงวัน) และเปลี่ยนแปลงขึ้นลงในวันเดียว\n'+
+'3. มีความผิดปกติทาง cognition เพิ่มเติม (ความจำ การรับรู้เวลาสถานที่ ภาษา การรับรู้)\n'+
+'4. อธิบายด้วย neurocognitive disorder เดิมไม่ได้ และไม่ได้เกิดในภาวะหมดสติ\n'+
+'5. มีหลักฐานว่าเกิดจากโรคทางกาย สาร หรือยา',0],
+
+['psy','Major neurocognitive disorder','Dementia',
+'Cognition ลดลงชัดเจนจากเดิม ≥ 1 domain\n'+
+'(complex attention · executive · learning & memory · language · perceptual-motor · social cognition)\n'+
+'รบกวนการใช้ชีวิตประจำวันจนต้องพึ่งคนอื่น\n'+
+'ไม่ได้เกิดเฉพาะช่วง delirium\n'+
+'# Mild NCD\n'+
+'ลดลงเล็กน้อย และยังใช้ชีวิตได้เองแม้ต้องพยายามมากขึ้น',0],
+
+['psy','Alcohol use disorder','Alcohol use disorder',
+'≥ 2 ใน 11 ข้อ ภายใน 12 เดือน\n'+
+'ดื่มมากหรือนานกว่าที่ตั้งใจ · พยายามลดแล้วทำไม่ได้ · ใช้เวลามากกับการหาดื่ม / ดื่ม / สร่าง · อยากดื่ม (craving) · เสียหน้าที่ · ดื่มต่อแม้มีปัญหาสังคม · เลิกกิจกรรมสำคัญ · ดื่มในสถานการณ์อันตราย · ดื่มต่อแม้รู้ว่าเกิดปัญหากายหรือใจ · Tolerance · Withdrawal\n'+
+'# ความรุนแรง\n'+
+'Mild 2–3 · Moderate 4–5 · Severe ≥ 6',0],
+
+['psy','Anorexia nervosa','Anorexia nervosa',
+'1. จำกัดอาหารจนน้ำหนักต่ำกว่าเกณฑ์อย่างชัดเจน\n'+
+'2. กลัวน้ำหนักขึ้นอย่างมาก หรือมีพฤติกรรมขัดขวางการเพิ่มน้ำหนัก\n'+
+'3. การรับรู้รูปร่างผิดปกติ\n'+
+'# ความรุนแรงตาม BMI\n'+
+'Mild ≥ 17 · Moderate 16–16.99 · Severe 15–15.99 · Extreme < 15',0],
+
+['psy','Bulimia nervosa','Bulimia nervosa',
+'กินอย่างควบคุมไม่ได้ (binge) ซ้ำ ๆ + ชดเชยด้วยวิธีไม่เหมาะสม (ล้วงคอ ยาระบาย อดอาหาร ออกกำลังกายหนัก)\n'+
+'ทั้งสองอย่าง ≥ 1 ครั้ง/สัปดาห์ นาน 3 เดือน\n'+
+'ประเมินคุณค่าตัวเองจากรูปร่างและน้ำหนักมากเกินไป\n'+
+'ไม่ได้เกิดเฉพาะช่วงที่เป็น anorexia nervosa',0],
+
+['psy','Borderline personality disorder','Borderline personality disorder',
+'≥ 5 ใน 9 ข้อ\n'+
+'ดิ้นรนไม่ให้ถูกทอดทิ้ง · ความสัมพันธ์ไม่มั่นคง (idealize / devalue) · ภาพลักษณ์ตัวเองไม่มั่นคง · หุนหันในเรื่องที่ทำร้ายตัวเอง ≥ 2 เรื่อง · พฤติกรรมทำร้ายตัวเองหรือฆ่าตัวตายซ้ำ ๆ · อารมณ์แปรปรวน · รู้สึกว่างเปล่าเรื้อรัง · โกรธรุนแรงไม่เหมาะสม · paranoid หรือ dissociation ชั่วคราวเมื่อเครียด',0],
+
+['psy','Antisocial personality disorder','Antisocial personality disorder',
+'อายุ ≥ 18 ปี และมี conduct disorder ก่อนอายุ 15 ปี\n'+
+'ไม่สนใจสิทธิผู้อื่นตั้งแต่อายุ 15 ปี ≥ 3 ใน 7 ข้อ\n'+
+'ทำผิดกฎหมายซ้ำ · โกหกหลอกลวง · หุนหัน · ก้าวร้าวต่อสู้ · ไม่สนความปลอดภัยของตัวเองและคนอื่น · ไม่รับผิดชอบ · ไม่สำนึกผิด',0],
+
+['psy','Insomnia disorder','Insomnia disorder',
+'หลับยาก หลับไม่ต่อเนื่อง หรือตื่นเช้ากว่าที่ตั้งใจ\n'+
+'≥ 3 คืน/สัปดาห์ นาน ≥ 3 เดือน\n'+
+'ทั้งที่มีโอกาสนอนเพียงพอ และมีผลกระทบตอนกลางวัน',0],
+
+['psy','ADHD','Attention-deficit/hyperactivity disorder',
+'Inattention และ/หรือ hyperactivity-impulsivity ≥ 6 อาการ (อายุ ≥ 17 ปี ≥ 5 อาการ) นาน ≥ 6 เดือน\n'+
+'มีหลายอาการก่อนอายุ 12 ปี\n'+
+'เกิดใน ≥ 2 สถานที่ (บ้าน โรงเรียน ที่ทำงาน)\n'+
+'รบกวนการเรียน การทำงาน หรือสังคม',0],
+
+['psy','Catatonia','Catatonia',
+'≥ 3 ใน 12 ข้อ\n'+
+'Stupor · catalepsy · waxy flexibility · mutism · negativism · posturing · mannerism · stereotypy · agitation · grimacing · echolalia · echopraxia\n'+
+'# รักษา\n'+
+'Lorazepam challenge → ถ้าไม่ดีขึ้นพิจารณา ECT',0],
+
+['psy','Hunter criteria','Serotonin syndrome',
+'ได้ยากลุ่ม serotonergic + อย่างใดอย่างหนึ่ง\n'+
+'1. Spontaneous clonus\n'+
+'2. Inducible clonus + agitation หรือ diaphoresis\n'+
+'3. Ocular clonus + agitation หรือ diaphoresis\n'+
+'4. Tremor + hyperreflexia\n'+
+'5. Hypertonia + ไข้ > 38 °C + ocular หรือ inducible clonus',0],
+
+['psy','Neuroleptic malignant syndrome — FEVER','Neuroleptic malignant syndrome',
+'หลังได้ยา antipsychotic (หรือหยุดยา dopaminergic ทันที)\n'+
+'F — Fever\n'+
+'E — Encephalopathy\n'+
+'V — Vitals ไม่คงที่ (autonomic instability)\n'+
+'E — Elevated enzymes (CK สูงมาก)\n'+
+'R — Rigidity แบบ lead pipe\n'+
+'# แยกจาก serotonin syndrome\n'+
+'NMS เกิดช้าเป็นวัน แข็งเกร็ง reflex ลดลง · serotonin syndrome เกิดเร็วเป็นชั่วโมง มี clonus และ hyperreflexia',0]
+];
+
+
+// ---------------- เตรียมข้อมูล ----------------
+function hash(t){var h=5381;for(var i=0;i<t.length;i++){h=((h<<5)+h+t.charCodeAt(i))>>>0;}return h.toString(36);}
+var CAT={};CATS.forEach(function(c){CAT[c.id]=c;});
+var CARDS=RAW.map(function(r){return {c:r[0],s:r[1],d:r[2],n:r[3],p:!!r[4],id:hash(r[0]+'|'+r[1])};});
+
+// ---------------- บันทึกความคืบหน้า ----------------
+// known / miss เก็บเวลาที่กด (ms) ต่อการ์ด เพื่อให้รวมข้อมูลข้ามเครื่องได้ — ค่าที่ใหม่กว่าชนะ
+var KEY='pathoFC.v1';
+var P={known:{},miss:{},resetAt:0,dir:'sd',star:false,unk:false};
+try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){for(var k in sv)P[k]=sv[k];}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}}
+
+// ---------------- ซิงค์ข้ามเครื่อง (Google Apps Script + Sheet) ----------------
+var SKEY='pathoFC.sync';
+var SY=null;            // {url, code}
+try{SY=JSON.parse(localStorage.getItem(SKEY)||'null');}catch(e){SY=null;}
+var SYNC={busy:false,dirty:false,timer:null,last:null,err:null,again:false};
+
+function tsv(v){return typeof v==='number'?v:1;}
+function progOf(o){return {known:o.known||{},miss:o.miss||{},resetAt:o.resetAt||0};}
+function mergeProg(a,b){
+  a=progOf(a||{});b=progOf(b||{});
+  var r={known:{},miss:{},resetAt:Math.max(a.resetAt,b.resetAt)}, ids={};
+  [a.known,a.miss,b.known,b.miss].forEach(function(m){for(var k in m)ids[k]=1;});
+  for(var id in ids){
+    var best=null,bt=-1;
+    [['known',a],['miss',a],['known',b],['miss',b]].forEach(function(x){
+      var m=x[1][x[0]]; if(Object.prototype.hasOwnProperty.call(m,id)){var t=tsv(m[id]); if(t>bt){bt=t;best=x[0];}}
+    });
+    if(best && bt>r.resetAt) r[best][id]=bt;
+  }
+  return r;
+}
+function sameProg(a,b){
+  a=progOf(a);b=progOf(b);
+  if(a.resetAt!==b.resetAt) return false;
+  var f=function(x,y){var kx=Object.keys(x),ky=Object.keys(y);if(kx.length!==ky.length)return false;
+    for(var i=0;i<kx.length;i++){if(tsv(x[kx[i]])!==tsv(y[kx[i]]))return false;}return true;};
+  return f(a.known,b.known)&&f(a.miss,b.miss);
+}
+function syncStatus(){
+  if(!SY) return {cls:'',txt:'ยังไม่ได้ตั้งค่า — ความคืบหน้าเก็บเฉพาะเครื่องนี้'};
+  if(SYNC.busy) return {cls:'busy',txt:'กำลังซิงค์…'};
+  if(SYNC.err) return {cls:'err',txt:'ซิงค์ไม่สำเร็จ: '+SYNC.err+' — จะลองใหม่อัตโนมัติ'};
+  if(SYNC.last){var t=SYNC.last;return {cls:'ok',txt:'ซิงค์ล่าสุด <b>'+('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2)+'</b>'};}
+  return {cls:'',txt:'ตั้งค่าแล้ว รอซิงค์ครั้งแรก'};
+}
+function paintSync(){
+  var el=document.getElementById('syncSt'); if(!el) return;
+  var s=syncStatus(); el.className='st '+s.cls; el.innerHTML='<span class="cloud '+s.cls+'"></span>'+s.txt;
+}
+function syncNow(){
+  if(!SY) return Promise.resolve();
+  if(SYNC.busy){SYNC.again=true;return Promise.resolve();}
+  SYNC.busy=true; SYNC.again=false; clearTimeout(SYNC.timer); paintSync();
+  var hadDirty=SYNC.dirty; SYNC.dirty=false;
+  return fetch(SY.url+(SY.url.indexOf('?')<0?'?':'&')+'key='+encodeURIComponent(SY.code)+'&_='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res||!res.ok) throw new Error((res&&res.err)||'เซิร์ฟเวอร์ตอบกลับผิดรูปแบบ');
+      var remote=progOf(res.data||{});
+      var local=progOf(P);
+      var m=mergeProg(local,remote);
+      var changedLocal=!sameProg(m,local);
+      P.known=m.known;P.miss=m.miss;P.resetAt=m.resetAt;save();
+      if(changedLocal) refreshView();
+      if(hadDirty || !sameProg(m,remote)){
+        return fetch(SY.url,{method:'POST',body:JSON.stringify({key:SY.code,data:m})})
+          .then(function(r){return r.json();})
+          .then(function(x){if(!x||!x.ok) throw new Error((x&&x.err)||'บันทึกไม่สำเร็จ');});
+      }
+    })
+    .then(function(){SYNC.last=new Date();SYNC.err=null;})
+    .catch(function(e){SYNC.err=String((e&&e.message)||e);SYNC.dirty=SYNC.dirty||hadDirty;})
+    .then(function(){
+      SYNC.busy=false; paintSync();
+      if(SYNC.again||(SYNC.err&&SYNC.dirty)) SYNC.timer=setTimeout(syncNow,SYNC.err?15000:800);
+    });
+}
+function schedulePush(){ if(!SY) return; SYNC.dirty=true; clearTimeout(SYNC.timer); SYNC.timer=setTimeout(syncNow,1500); }
+function flushBeacon(){
+  if(!SY||!SYNC.dirty||!navigator.sendBeacon) return;
+  try{ navigator.sendBeacon(SY.url,new Blob([JSON.stringify({key:SY.code,data:progOf(P)})],{type:'text/plain'})); SYNC.dirty=false; }catch(e){}
+}
+function refreshView(){ if(S.view==='home') home(); else if(S.view==='cats') cats(); else if(S.view==='sum') summary(); }
+function syncLink(){
+  var raw=SY.url+'|'+SY.code;
+  var b=btoa(unescape(encodeURIComponent(raw)));
+  return location.href.split('#')[0]+'#sync='+b;
+}
+function readSyncHash(){
+  var m=/^#sync=(.+)$/.exec(location.hash||''); if(!m) return false;
+  try{
+    var raw=decodeURIComponent(escape(atob(decodeURIComponent(m[1])))), i=raw.lastIndexOf('|');
+    if(i>0){SY={url:raw.slice(0,i),code:raw.slice(i+1)};localStorage.setItem(SKEY,JSON.stringify(SY));}
+  }catch(e){}
+  try{history.replaceState(null,'',location.href.split('#')[0]);}catch(e){location.hash='';}
+  return true;
+}
+
+// ---------------- state ----------------
+var S={view:'home',deck:[],i:0,flip:false,title:'',src:null,shuf:false,ok:0,no:0};
+var app=document.getElementById('app');
+
+function esc(t){return String(t).replace(/[&<>"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];});}
+function rich(t){
+  return String(t).split('\n').map(function(line){
+    var h=/^#\s*/.test(line);
+    var x=esc(line.replace(/^#\s*/,'')).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+    return h?'<span class="sec">'+x+'</span>':x;
+  }).join('<br>').replace(/<\/span><br>/g,'</span>');
+}
+function isLong(c){return c.n.indexOf('\n')>=0;}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var x=a[i];a[i]=a[j];a[j]=x;}return a;}
+function knownCount(list){return list.filter(function(c){return P.known[c.id];}).length;}
+function pct(a,b){return b?Math.round(a*100/b):0;}
+
+function filtered(list){
+  return list.filter(function(c){
+    if(P.star && !c.p) return false;
+    if(P.unk && P.known[c.id]) return false;
+    return true;
+  });
+}
+
+// ---------------- หน้าแรก ----------------
+function home(){
+  S.view='home';
+  var k=knownCount(CARDS), st=CARDS.filter(function(c){return c.p;}).length;
+  app.innerHTML=
+   '<div class="hero"><div class="logo">🩺</div><h1>Pathognomonic Flashcard</h1>'+
+   '<p>'+CARDS.length+' การ์ด · '+CATS.length+' หมวด · ★ '+st+' ข้อที่แทบเฉพาะโรค</p></div>'+
+   '<div class="modes">'+
+     '<button class="mode" onclick="cats()"><div class="ic">📂</div><b>แยกตามหมวด</b><span>เลือกทวนทีละระบบ เรียงตามลำดับ</span></button>'+
+     '<button class="mode" onclick="startAll()"><div class="ic">🔀</div><b>สุ่มรวมทุกหมวด</b><span>สลับทุกการ์ดจากทุกระบบ</span></button>'+
+   '</div>'+
+   '<div class="panel"><h3>ตั้งค่า</h3><div class="opts">'+
+     '<button class="chip'+(P.dir==='sd'?' on':'')+'" onclick="setDir(\'sd\')">ถาม sign → ตอบโรค</button>'+
+     '<button class="chip'+(P.dir==='ds'?' on':'')+'" onclick="setDir(\'ds\')">ถามโรค → ตอบ sign</button>'+
+     '<button class="chip star'+(P.star?' on':'')+'" onclick="tog(\'star\')">★ เฉพาะ pathognomonic</button>'+
+     '<button class="chip'+(P.unk?' on':'')+'" onclick="tog(\'unk\')">เฉพาะที่ยังจำไม่ได้</button>'+
+   '</div></div>'+
+   '<div class="panel"><div class="stat"><span>จำได้แล้ว</span><span><b style="color:var(--tx)">'+k+'</b> / '+CARDS.length+' ('+pct(k,CARDS.length)+'%)</span></div>'+
+   '<div class="bar"><i style="width:'+pct(k,CARDS.length)+'%"></i></div>'+
+   '<button class="reset" onclick="resetAll()">ล้างความคืบหน้าทั้งหมด</button></div>'+
+   syncPanel();
+  paintSync();
+}
+
+// ---------------- แผงตั้งค่าซิงค์ ----------------
+var SYNC_FORM=false;
+function syncPanel(){
+  var h='<div class="panel sync"><h3>☁️ ซิงค์ข้ามเครื่อง</h3><div id="syncSt" class="st"></div>';
+  if(SY && !SYNC_FORM){
+    h+='<div class="row2"><button class="chip" onclick="syncNow()">ซิงค์ตอนนี้</button>'+
+       '<button class="chip" onclick="copyLink()">คัดลอกลิงก์สำหรับเครื่องอื่น</button>'+
+       '<button class="chip" onclick="SYNC_FORM=true;home()">แก้ไข</button>'+
+       '<button class="chip" onclick="stopSync()">เลิกซิงค์</button></div>'+
+       '<p class="help">เปิดลิงก์ที่คัดลอกบนมือถือหรืออีกเครื่อง แล้วเครื่องนั้นจะซิงค์ให้อัตโนมัติ · ลิงก์นี้มีรหัสซิงค์อยู่ อย่าส่งให้คนอื่น</p>';
+  } else {
+    h+='<label class="fld">Web app URL จาก Apps Script<input id="sUrl" placeholder="https://script.google.com/macros/s/…/exec" value="'+esc(SY?SY.url:'')+'"></label>'+
+       '<label class="fld">รหัสซิงค์ (ตั้งเอง อย่างน้อย 4 ตัว ใช้รหัสเดียวกันทุกเครื่อง)<input id="sCode" placeholder="เช่น miw-flash-2569" value="'+esc(SY?SY.code:'')+'"></label>'+
+       '<div class="row2"><button class="chip on" onclick="saveSync()">บันทึกและซิงค์</button>'+
+       (SY?'<button class="chip" onclick="SYNC_FORM=false;home()">ยกเลิก</button>':'')+'</div>'+
+       '<p class="help">ตั้งค่าแค่เครื่องแรกเครื่องเดียว เครื่องอื่นใช้ปุ่ม "คัดลอกลิงก์สำหรับเครื่องอื่น" · วิธีสร้าง Web app ดูในไฟล์ วิธีตั้งค่าซิงค์ ที่มากับเว็บ</p>';
+  }
+  return h+'</div>';
+}
+function saveSync(){
+  var u=document.getElementById('sUrl').value.trim(), c=document.getElementById('sCode').value.trim();
+  if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)){alert('URL ต้องขึ้นต้นด้วย https://script.google.com/');return;}
+  if(c.length<4){alert('รหัสซิงค์ต้องยาวอย่างน้อย 4 ตัวอักษร');return;}
+  SY={url:u,code:c}; try{localStorage.setItem(SKEY,JSON.stringify(SY));}catch(e){}
+  SYNC_FORM=false; SYNC.err=null; SYNC.dirty=true; home(); syncNow();
+}
+function stopSync(){
+  if(!confirm('เลิกซิงค์บนเครื่องนี้? ความคืบหน้าในเครื่องยังอยู่ ส่วนข้อมูลใน Google Sheet ไม่ถูกลบ'))return;
+  SY=null; try{localStorage.removeItem(SKEY);}catch(e){} SYNC.last=null; SYNC.err=null; home();
+}
+function copyLink(){
+  var l=syncLink();
+  var done=function(){alert('คัดลอกลิงก์แล้ว — ส่งให้ตัวเองแล้วเปิดบนอีกเครื่อง');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(l).then(done,function(){prompt('คัดลอกลิงก์นี้',l);});}
+  else prompt('คัดลอกลิงก์นี้',l);
+}
+function setDir(d){P.dir=d;save();home();}
+function tog(k){P[k]=!P[k];save();home();}
+function resetAll(){
+  if(confirm('ล้างข้อมูลจำได้/ยังไม่ได้ทั้งหมด?'+(SY?' (ทุกเครื่องที่ซิงค์จะถูกล้างด้วย)':''))){
+    P.known={};P.miss={};P.resetAt=Date.now();save();home();schedulePush();
+  }
+}
+
+// ---------------- หน้าเลือกหมวด ----------------
+function cats(){
+  S.view='cats';
+  var h='<header class="top"><button class="back" onclick="home()">← หน้าแรก</button><div><h1>แยกตามหมวด</h1>'+
+        '<div class="sub">'+(P.star?'★ เฉพาะ pathognomonic · ':'')+(P.unk?'เฉพาะที่ยังจำไม่ได้':'ทุกการ์ด')+'</div></div></header><div class="cats">';
+  CATS.forEach(function(c){
+    var all=CARDS.filter(function(x){return x.c===c.id;}), use=filtered(all), k=knownCount(all);
+    h+='<button class="cat" style="--h:'+c.hue+'" onclick="startCat(\''+c.id+'\')">'+
+       '<div class="nm">'+c.icon+' '+esc(c.name)+'</div>'+
+       '<div class="ct">'+use.length+' การ์ด'+(use.length!==all.length?' (จาก '+all.length+')':'')+' · จำได้ '+k+'/'+all.length+'</div>'+
+       '<div class="bar"><i style="width:'+pct(k,all.length)+'%"></i></div></button>';
+  });
+  h+='</div>';
+  app.innerHTML=h;
+}
+
+// ---------------- เริ่มสำรับ ----------------
+function startCat(id){
+  var base=CARDS.filter(function(x){return x.c===id;});
+  begin(filtered(base), CAT[id].icon+' '+CAT[id].name, {type:'cat',id:id}, false);
+}
+function startAll(){ begin(shuffle(filtered(CARDS)), '🔀 สุ่มรวมทุกหมวด', {type:'all'}, true); }
+function begin(deck,title,src,shuf){
+  S.deck=deck;S.i=0;S.flip=false;S.title=title;S.src=src;S.shuf=shuf;S.ok=0;S.no=0;S.view='study';
+  study();
+}
+function restartSame(onlyMissed){
+  var base = S.src.type==='cat' ? CARDS.filter(function(x){return x.c===S.src.id;}) : CARDS;
+  var d = filtered(base);
+  if(onlyMissed) d = d.filter(function(c){return P.miss[c.id];});
+  if(S.src.type==='all' || S.shuf) d = shuffle(d);
+  begin(d,S.title,S.src,S.shuf);
+}
+
+// ---------------- หน้าเรียน ----------------
+function study(){
+  S.view='study';
+  if(!S.deck.length){
+    app.innerHTML='<header class="top"><button class="back" onclick="leave()">← กลับ</button><h1>'+esc(S.title)+'</h1></header>'+
+      '<div class="empty">ไม่มีการ์ดตามเงื่อนไขที่ตั้งไว้<br>ลองปิดตัวกรอง ★ หรือ "เฉพาะที่ยังจำไม่ได้" ที่หน้าแรก</div>';
+    return;
+  }
+  if(S.i>=S.deck.length){summary();return;}
+  var c=S.deck[S.i], cat=CAT[c.c];
+  var q = P.dir==='sd' ? c.s : c.d;
+  var a = P.dir==='sd' ? c.d : c.s;
+  var ref = P.dir==='sd' ? c.s : c.d;
+  var mk = P.known[c.id] ? '<span class="mk ok">จำได้</span>' : (P.miss[c.id] ? '<span class="mk no">ยังไม่ได้</span>' : '');
+  var badge = c.p ? '<span class="badge">★ pathognomonic</span>' : '';
+  var crit = cat.kind==='crit';
+  var lq = crit ? (P.dir==='sd'?'CRITERIA':'ใช้วินิจฉัย') : (P.dir==='sd'?'SIGN':'โรค');
+  var la = crit ? (P.dir==='sd'?'ใช้วินิจฉัย':'CRITERIA') : (P.dir==='sd'?'โรค':'SIGN');
+  var lng = isLong(c) ? ' long' : '';
+  app.innerHTML=
+   '<header class="top"><button class="back" onclick="leave()">← กลับ</button><div><h1>'+esc(S.title)+'</h1>'+
+   '<div class="sub">'+(P.dir==='sd'?'ถาม sign → ตอบโรค':'ถามโรค → ตอบ sign')+'</div></div></header>'+
+   '<div class="meta" style="--h:'+cat.hue+'"><span class="tag"><span class="dot"></span>'+esc(cat.name)+'</span>'+
+   '<span>'+(S.i+1)+' / '+S.deck.length+'</span></div>'+
+   '<div class="bar" style="margin:0 0 10px"><i style="width:'+pct(S.i,S.deck.length)+'%"></i></div>'+
+   '<div class="scene" id="scene" style="--h:'+cat.hue+'"><div class="card'+(S.flip?' flip':'')+'" id="card">'+
+     '<div class="face front"><span class="lbl">'+lq+'</span>'+badge+mk+
+        '<div class="q">'+esc(q)+'</div><div class="hint">'+(crit?'นึกให้ครบก่อน แล้วแตะเพื่อพลิก':'แตะเพื่อพลิก')+'</div></div>'+
+     '<div class="face back'+lng+'"><span class="lbl">'+la+'</span>'+badge+
+        '<div class="ans">'+esc(a)+'</div><div class="note">'+rich(c.n)+'</div>'+
+        '<div class="ref">'+esc(ref)+'</div></div>'+
+   '</div></div>'+
+   '<div class="ctrl">'+
+     '<button class="btn nav" onclick="prev()" '+(S.i===0?'disabled':'')+' aria-label="ก่อนหน้า">‹</button>'+
+     '<button class="btn no" onclick="mark(false)">✗ ยังไม่ได้</button>'+
+     '<button class="btn ok" onclick="mark(true)">✓ จำได้</button>'+
+     '<button class="btn nav" onclick="next()" aria-label="ถัดไป">›</button>'+
+   '</div>'+
+   '<div class="tools"><button class="chip" onclick="reshuffle()">🔀 สลับลำดับใหม่</button>'+
+   '<button class="chip" onclick="flip()">↻ พลิกการ์ด</button></div>'+
+   '<div class="keys">คีย์ลัด: Space พลิก · ← → เลื่อน · 1 ยังไม่ได้ · 2 จำได้ · มือถือปัดซ้ายขวาได้</div>';
+  var sc=document.getElementById('scene');
+  sc.addEventListener('click',flip);
+  var x0=null,y0=null;
+  sc.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;y0=e.touches[0].clientY;},{passive:true});
+  sc.addEventListener('touchend',function(e){
+    if(x0===null)return;var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;x0=null;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)){e.preventDefault(); if(dx<0)next(); else prev();}
+  });
+}
+function flip(){ if(S.view!=='study'||!S.deck.length)return; S.flip=!S.flip; var el=document.getElementById('card'); if(el) el.classList.toggle('flip',S.flip); }
+function next(){ if(S.view!=='study')return; S.i++; S.flip=false; study(); }
+function prev(){ if(S.view!=='study'||S.i===0)return; S.i--; S.flip=false; study(); }
+function mark(ok){
+  if(S.view!=='study'||!S.deck.length)return;
+  var c=S.deck[S.i];
+  var now=Date.now();
+  if(ok){P.known[c.id]=now;delete P.miss[c.id];S.ok++;} else {P.miss[c.id]=now;delete P.known[c.id];S.no++;}
+  save(); schedulePush(); next();
+}
+function reshuffle(){ S.deck=shuffle(S.deck); S.i=0; S.flip=false; S.shuf=true; study(); }
+function leave(){ if(S.src&&S.src.type==='cat') cats(); else home(); }
+
+// ---------------- สรุปท้ายสำรับ ----------------
+function summary(){
+  S.view='sum';
+  var missed=S.deck.filter(function(c){return P.miss[c.id];}).length;
+  var tot=S.deck.length, k=S.deck.filter(function(c){return P.known[c.id];}).length;
+  app.innerHTML='<header class="top"><button class="back" onclick="leave()">← กลับ</button><h1>'+esc(S.title)+'</h1></header>'+
+   '<div class="panel sum"><div style="font-size:40px">'+(k===tot?'🎉':'📘')+'</div>'+
+   '<div class="big">'+pct(k,tot)+'%</div><div style="color:var(--dim)">จำได้ในสำรับนี้</div>'+
+   '<div class="row"><div><b style="color:var(--good)">'+k+'</b>จำได้</div><div><b style="color:var(--bad)">'+missed+'</b>ยังไม่ได้</div><div><b>'+tot+'</b>ทั้งหมด</div></div>'+
+   '<div class="acts">'+
+     (missed?'<button class="btn no" onclick="restartSame(true)">ทวนเฉพาะที่ยังไม่ได้ ('+missed+')</button>':'')+
+     '<button class="btn" onclick="restartSame(false)">เริ่มสำรับนี้ใหม่</button>'+
+     '<button class="btn" onclick="home()">กลับหน้าแรก</button>'+
+   '</div></div>';
+}
+
+// ---------------- คีย์ลัด ----------------
+document.addEventListener('keydown',function(e){
+  if(S.view!=='study')return;
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();flip();}
+  else if(e.key==='ArrowRight'){next();}
+  else if(e.key==='ArrowLeft'){prev();}
+  else if(e.key==='1'){mark(false);}
+  else if(e.key==='2'){mark(true);}
+});
+
+// ---------------- เริ่มทำงาน ----------------
+readSyncHash();
+home();
+if(SY) syncNow();
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='hidden') flushBeacon();
+  else if(SY) syncNow();
+});
+window.addEventListener('pagehide',flushBeacon);
+window.addEventListener('online',function(){if(SY)syncNow();});
+</script>
+</body>
+</html>
